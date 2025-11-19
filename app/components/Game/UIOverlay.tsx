@@ -1,11 +1,12 @@
 import React from 'react';
-import { GameStatus } from './types';
+import { GameStatus, CompletionData } from './types';
 
 interface UIOverlayProps {
   gameState: GameStatus;
   jumpModifier: number;
   setJumpModifier: (val: number) => void;
   onRestart: () => void;
+  completionData: CompletionData | null;
 }
 
 const UIOverlay: React.FC<UIOverlayProps> = ({
@@ -13,6 +14,7 @@ const UIOverlay: React.FC<UIOverlayProps> = ({
   jumpModifier,
   setJumpModifier,
   onRestart,
+  completionData,
 }) => {
   return (
     <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-6">
@@ -50,9 +52,24 @@ const UIOverlay: React.FC<UIOverlayProps> = ({
             <h2 className={`text-4xl font-bold mb-4 ${gameState === 'won' ? 'text-yellow-400' : 'text-red-500'}`}>
               {gameState === 'won' ? 'MISSION COMPLETE' : 'GAME OVER'}
             </h2>
+            
+            {gameState === 'won' && completionData && (
+              <div className="mb-6 space-y-3">
+                <div className="bg-yellow-500/20 border border-yellow-500 p-4 rounded">
+                  <div className="text-yellow-400 text-5xl font-bold mb-2">
+                    {completionData.points.toLocaleString()}
+                  </div>
+                  <div className="text-yellow-300 text-sm font-mono">POINTS EARNED</div>
+                </div>
+                <div className="text-white font-mono text-lg">
+                  Time: {completionData.completionTime.toFixed(2)}s
+                </div>
+              </div>
+            )}
+            
             <p className="text-white mb-8 font-mono">
-              {gameState === 'won' 
-                ? "Excellent work, Kilo Man. The objective has been secured." 
+              {gameState === 'won'
+                ? "Excellent work, Kilo Man. The objective has been secured."
                 : "Kilo Man has fallen. The mission is compromised."}
             </p>
             <button

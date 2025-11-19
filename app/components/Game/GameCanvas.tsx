@@ -55,6 +55,16 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, setGameState, jumpMo
   const cameraRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const monstersRef = useRef<MonsterState[]>([]);
   const keysRef = useRef<{ [key: string]: boolean }>({});
+  const logoRef = useRef<HTMLImageElement | null>(null);
+
+  // Load Logo
+  useEffect(() => {
+    const img = new Image();
+    img.src = '/KiloLogo.png';
+    img.onload = () => {
+      logoRef.current = img;
+    };
+  }, []);
 
   // Initialize Input Listeners
   useEffect(() => {
@@ -114,7 +124,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, setGameState, jumpMo
 
   // --- RENDERING HELPERS ---
 
-  const drawBackground = (ctx: CanvasRenderingContext2D, cameraX: number) => {
+  const drawBackground = (ctx: CanvasRenderingContext2D, cameraX: number, cameraY: number) => {
     const w = ctx.canvas.width;
     const h = ctx.canvas.height;
 
@@ -124,6 +134,27 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, setGameState, jumpMo
     gradient.addColorStop(1, '#3b0764'); // Deep Purple
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, w, h);
+
+    // Kilo Logo Background
+    if (logoRef.current) {
+      const logo = logoRef.current;
+      const scale = 1.5; // Large
+      const scaledW = logo.width * scale;
+      const scaledH = logo.height * scale;
+      
+      // Center on screen with parallax offset
+      // We want it to stay relatively centered but move slightly to show depth
+      const parallaxX = cameraX * 0.05;
+      const parallaxY = cameraY * 0.05;
+      
+      const x = (w / 2) - (scaledW / 2) - parallaxX;
+      const y = (h / 2) - (scaledH / 2) - parallaxY;
+      
+      ctx.save();
+      ctx.globalAlpha = 0.2; // Subtle background
+      ctx.drawImage(logo, x, y, scaledW, scaledH);
+      ctx.restore();
+    }
 
     // Parallax Stars/Particles
     ctx.fillStyle = '#FFF';
@@ -425,7 +456,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, setGameState, jumpMo
     const cameraY = cameraRef.current.y;
 
     // Draw Background (Parallax)
-    drawBackground(ctx, cameraX);
+    drawBackground(ctx, cameraX, cameraY);
 
     // Draw Level Entities
     LEVEL_1.forEach(entity => {

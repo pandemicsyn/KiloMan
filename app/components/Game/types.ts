@@ -41,6 +41,11 @@ export interface MonsterState {
 
 export type GameStatus = 'start' | 'playing' | 'won' | 'lost';
 
+export interface CompletionData {
+  completionTime: number; // Time in seconds
+  points: number;
+}
+
 export interface GameConfig {
   gravity: number;
   friction: number;
