@@ -56,6 +56,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, setGameState, jumpMo
   const monstersRef = useRef<MonsterState[]>([]);
   const keysRef = useRef<{ [key: string]: boolean }>({});
   const logoRef = useRef<HTMLImageElement | null>(null);
+  const playerAvatarRef = useRef<HTMLImageElement | null>(null);
 
   // Load Logo
   useEffect(() => {
@@ -63,6 +64,15 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, setGameState, jumpMo
     img.src = '/KiloLogo.png';
     img.onload = () => {
       logoRef.current = img;
+    };
+  }, []);
+
+  // Load Player Avatar (Gravatar for GitHub user pandemicsyn)
+  useEffect(() => {
+    const img = new Image();
+    img.src = 'https://github.com/pandemicsyn.png';
+    img.onload = () => {
+      playerAvatarRef.current = img;
     };
   }, []);
 
@@ -213,7 +223,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, setGameState, jumpMo
     ctx.strokeRect(x, y, entity.w, entity.h);
   };
 
-  const drawHumanoid = (ctx: CanvasRenderingContext2D, p: PlayerState, cameraX: number, cameraY: number) => {
+  const drawPlayer = (ctx: CanvasRenderingContext2D, p: PlayerState, cameraX: number, cameraY: number) => {
     const x = p.x - cameraX;
     const y = p.y - cameraY;
     const cx = x + p.width / 2;
@@ -226,6 +236,41 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, setGameState, jumpMo
     ctx.ellipse(cx, y + p.height, p.width / 1.5, 5, 0, 0, Math.PI * 2);
     ctx.fill();
 
+    // Draw Gravatar image if loaded
+    if (playerAvatarRef.current) {
+      // Animation bob effect
+      const bob = Math.sin(frameCountRef.current * 0.2) * (Math.abs(p.vx) > 0.1 ? 3 : 1);
+      
+      // Calculate aspect ratio to maintain proportions
+      const img = playerAvatarRef.current;
+      const aspectRatio = img.width / img.height;
+      const drawWidth = p.width;
+      const drawHeight = p.width / aspectRatio;
+      
+      // Draw image centered on player position
+      const drawX = x + (p.width - drawWidth) / 2;
+      const drawY = y + bob;
+      
+      // Flip image based on facing direction
+      ctx.save();
+      ctx.translate(cx, drawY + drawHeight / 2);
+      ctx.scale(p.facing, 1);
+      ctx.translate(-cx, -(drawY + drawHeight / 2));
+      
+      ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+      ctx.restore();
+    } else {
+      // Fallback to procedural humanoid if image not loaded
+      drawHumanoidProcedural(ctx, p, cameraX, cameraY, cx);
+    }
+
+    ctx.restore();
+  };
+
+  const drawHumanoidProcedural = (ctx: CanvasRenderingContext2D, p: PlayerState, cameraX: number, cameraY: number, cx: number) => {
+    const x = p.x - cameraX;
+    const y = p.y - cameraY;
+    
     // Body Color
     ctx.fillStyle = '#eab308'; // Yellow 500
 
@@ -250,8 +295,6 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, setGameState, jumpMo
     ctx.fillStyle = '#000';
     const eyeDir = p.facing === 1 ? 4 : -4;
     ctx.fillRect(cx + eyeDir - 2, y + 8 + bob, 4, 4);
-
-    ctx.restore();
   };
 
   const drawMonster = (ctx: CanvasRenderingContext2D, m: MonsterState, cameraX: number, cameraY: number) => {
@@ -495,7 +538,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, setGameState, jumpMo
     });
 
     // Draw Player
-    drawHumanoid(ctx, playerRef.current, cameraX, cameraY);
+    drawPlayer(ctx, playerRef.current, cameraX, cameraY);
   };
 
   const loop = () => {
