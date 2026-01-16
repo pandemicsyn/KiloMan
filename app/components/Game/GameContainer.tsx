@@ -4,22 +4,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import GameCanvas from './GameCanvas';
 import UIOverlay from './UIOverlay';
 import { GameStatus, CompletionData } from './types';
+import { calculatePoints } from './gameLogic';
 
 const GameContainer: React.FC = () => {
   const [gameState, setGameState] = useState<GameStatus>('start');
   const [jumpModifier, setJumpModifier] = useState<number>(1.0);
   const [completionData, setCompletionData] = useState<CompletionData | null>(null);
   const startTimeRef = useRef<number>(0);
-
-  // Calculate points based on completion time
-  const calculatePoints = (timeInSeconds: number): number => {
-    // Point system: Start with 10000 points, lose 100 points per second
-    // Minimum 1000 points
-    const basePoints = 10000;
-    const pointsPerSecond = 100;
-    const points = Math.max(1000, basePoints - Math.floor(timeInSeconds * pointsPerSecond));
-    return points;
-  };
 
   // Track game start time
   useEffect(() => {
